@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MOD BAN — High-Risk Reporter</title>
+  <style>
+    html, body { margin:0; padding:0; background:#000; color:#00ffcc; font-family:monospace; overflow:hidden; }
+    canvas { position:fixed; inset:0; }
+    .wrap { position:relative; z-index:10; display:flex; flex-direction:column; align-items:center; gap:14px; padding:20px; }
+    h1 { margin-top:10px; font-size:1.8rem; text-align:center; animation:glow 2s infinite alternate; }
+    @keyframes glow { from{ text-shadow:0 0 10px #0ff; } to{ text-shadow:0 0 22px #0ff, 0 0 34px #0ff; } }
+
+    .panel { width:min(720px,92vw); background:rgba(0,0,0,.6); border:1px solid #0ff; border-radius:12px; padding:14px; backdrop-filter: blur(2px); }
+    .row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+    .stack { display:flex; flex-direction:column; gap:8px; }
+    label.radio { display:flex; align-items:center; gap:8px; font-size:1rem; }
+    input[type="text"], textarea {
+      width:100%; background:#061616; color:#00ffcc; border:1px solid #0ff; border-radius:8px; padding:10px 12px; font-family:monospace;
+    }
+    textarea { min-height:100px; resize:vertical; }
+    .btn {
+      background:#ff2b2b; color:#fff; border:none; border-radius:10px; padding:12px 18px; font-weight:700; cursor:pointer;
+    }
+    .btn:disabled { opacity:.6; cursor:not-allowed; }
+    .note { font-size:.92rem; color:#eaffff; opacity:.9; }
+    .legal { font-size:.86rem; color:#ffd; opacity:.95; }
+    .centerText { position:fixed; top:16%; left:50%; transform:translateX(-50%); font-size:1.05rem; text-align:center; z-index:10; }
+    .two { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    @media (max-width:600px){ .two { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <canvas id="matrix"></canvas>
+
+  <div class="centerText" id="centerText">🔒 Welcome to MOD BAN — High-Risk Safety Module</div>
+
+  <div class="wrap">
+    <h1>Report a Dangerous Telegram Account</h1>
+
+    <div class="panel stack">
+      <div class="row">
+        <input id="username" type="text" placeholder="Telegram username (e.g. @user123)" />
+      </div>
+
+      <div class="row stack">
+        <div><b>Select violation type (choose one):</b></div>
+        <label class="radio"><input type="radio" name="violation" value="CSAM"> Child sexual abuse material (CSAM) — suspected</label>
+        <label class="radio"><input type="radio" name="violation" value="ILLICIT"> Illegal weapons and/or illegal drugs — solicitation/distribution</label>
+      </div>
+
+      <div class="two">
+        <div class="stack">
+          <textarea id="details" placeholder="Evidence summary (no illegal media): dates/timezones, public links/usernames, what was said/offered, context."></textarea>
+        </div>
+        <div class="stack">
+          <input id="links" type="text" placeholder="Optional public links (profiles, channels, posts)"/>
+          <input id="victims" type="text" placeholder="Approx. number of affected users (optional)"/>
+          <input id="tz" type="text" placeholder="Your timezone for timestamps (e.g., WAT / UTC+1)"/>
+        </div>
+      </div>
+
+      <div class="row">
+        <label class="radio"><input type="checkbox" id="truth"> I confirm this report is truthful and submitted in good faith.</label>
+      </div>
+
+      <div class="row" style="justify-content:space-between; gap:10px;">
+        <button class="btn" id="sendBtn">🚨 Send Report to Telegram</button>
+        <div class="note">
+          Tip: Also report in Telegram (Hold message → <i>Report</i>) for faster action.
+        </div>
+      </div>
+
+      <div class="legal">
+        <b>Important:</b> If reporting CSAM, <u>do not attach or forward illegal content</u>. Describe what you saw, provide metadata and public links only. Consider reporting to your local child-protection hotline (e.g., INHOPE member) or law enforcement as required by law.
+      </div>
+    </div>
+  </div>
+
+  <audio id="glitch" src="https://www.fesliyanstudios.com/play-mp3/387" preload="auto"></audio>
+
+  <script>
+    // ========= Matrix background =========
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+    function size(){ canvas.width = innerWidth; canvas.height = innerHeight; }
+    size(); addEventListener('resize', size);
+
+    const chars = "アァイイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモラリルレロワンABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    const fontSize = 16;
+    let columns = Math.ceil(canvas.width / fontSize);
+    let drops = new Array(columns).fill(1);
+
+    function draw(){
+      ctx.fillStyle = "rgba(0,0,0,0.06)";
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle = "#00FF41";
+      ctx.font = fontSize + "px monospace";
+      for(let i=0;i<drops.length;i++){
+        const text = chars[Math.floor(Math.random()*chars.length)];
+        ctx.fillText(text, i*fontSize, drops[i]*fontSize);
+        if (drops[i]*fontSize > canvas.height && Math.random() > 0.975) drops[i]=0;
+        drops[i]++;
+      }
+      requestAnimationFrame(draw);
+    }
+    draw();
+
+    // ========= Header phrases + glitch =========
+    const header = document.getElementById('centerText');
+    const glitch = document.getElementById('glitch');
+    const phrases = [
+      "🔒 Welcome to MOD BAN — High-Risk Safety Module",
+      "🧠 Building enforcement case file…",
+      "🛡️ Compiling evidence summary…",
+      "📡 Routing to Telegram Abuse Team…",
+      "⚡ Ready to send. Be truthful."
+    ];
+    let pi = 0;
+    setInterval(() => {
+      header.textContent = phrases[pi % phrases.length];
+      pi++; try{ glitch.currentTime = 0; glitch.play(); }catch(e){}
+    }, 3200);
+
+    // ========= Email body builder =========
+    function buildBody({username, type, details, links, victims, tz}){
+      const now = new Date();
+      const date = now.toISOString().replace('T',' ').slice(0,19) + " UTC";
+      let headline = "";
+      let rationale = "";
+      if (type === "CSAM") {
+        headline = "Suspected Child Sexual Abuse Material (CSAM)";
+        rationale =
+`I am reporting suspected child sexual abuse material (CSAM). I will NOT attach or transmit illegal content. Please escalate per your child-safety protocols and coordinate with appropriate authorities as required.`;
+      } else {
+        headline = "Illegal Weapons and/or Illegal Drugs — Solicitation/Distribution";
+        rationale =
+`I am reporting suspected solicitation/distribution of illegal weapons and/or illegal drugs. This appears to violate Telegram's Terms and applicable laws.`;
+      }
+
+      return `Dear Telegram Abuse Team,
+
+URGENT SAFETY REPORT — ${headline}
+
+• Username: ${username}
+• Report type: ${headline}
+• Time submitted: ${date}${tz ? " ("+tz+")" : ""}
+
+Summary of evidence (no illegal media attached):
+${details || "(see in-app report and public links listed below)"} 
+
+Public links / references:
+${links || "(none provided)"}
+
+Approximate number of affected users: ${victims || "(unknown)"}
+
+${rationale}
+
+I request an urgent review and appropriate enforcement action (account restriction/suspension) to protect users from further harm. I am available to provide additional metadata/context if needed.
+
+Thank you for your prompt attention.
+
+Sincerely,
+A concerned user`;
+    }
+
+    // ========= Send button =========
+    document.getElementById('sendBtn').addEventListener('click', () => {
+      const username = document.getElementById('username').value.trim();
+      const details = document.getElementById('details').value.trim();
+      const links = document.getElementById('links').value.trim();
+      const victims = document.getElementById('victims').value.trim();
+      const tz = document.getElementById('tz').value.trim();
+      const truth = document.getElementById('truth').checked;
+      const type = document.querySelector('input[name="violation"]:checked')?.value;
+
+      if (!username || !username.startsWith('@')) {
+        alert("Please enter a valid Telegram @username.");
+        return;
+      }
+      if (!type) {
+        alert("Please select ONE violation type.");
+        return;
+      }
+      if (!truth) {
+        alert("Please confirm the truthfulness checkbox.");
+        return;
+      }
+
+      const subject = `URGENT SAFETY REPORT — ${type === "CSAM" ? "CSAM" : "Illegal Weapons/Drugs"} — ${username}`;
+      const body = buildBody({username, type, details, links, victims, tz});
+
+      // Opens Gmail/Email app directly with prefilled fields
+      const mailto = `mailto:abuse@telegram.org?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.location.href = mailto;
+    });
+  </script>
+</body>
+</html>
